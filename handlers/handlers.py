@@ -27,6 +27,12 @@ def allowed():
     return filters.user(ALLOWED_USERS) & filters.private
 
 
+def allowed_callback():
+    if not ALLOWED_USERS:
+        return filters.all
+    return filters.user(ALLOWED_USERS)
+
+
 def _home_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         [
@@ -183,7 +189,7 @@ def register_link_handler(bot: Client, user: Client):
                 reply_markup=_tg_keyboard(link),
             )
 
-    @bot.on_callback_query(filters.user(ALLOWED_USERS))
+    @bot.on_callback_query(allowed_callback())
     async def handle_callback(_, cb: CallbackQuery):
         data = cb.data or ""
 

@@ -3,7 +3,7 @@ import time
 import logging
 from functools import partial
 
-from pyrogram import Client
+from pyrogram import Client, enums
 from pyrogram.types import Message as PyroMsg
 
 from config import DOWNLOAD_DIR, MAX_BOT_SIZE_MB, MEDIA_LABELS
@@ -80,7 +80,7 @@ async def send_media(bot_msg, user: Client, file_path: str, mtype: str, caption:
 
 
 async def _send_via_bot(bot_msg, file_path: str, mtype: str, caption: str):
-    kwargs = {"quote": True, "parse_mode": "html"}
+    kwargs = {"quote": True, "parse_mode": enums.ParseMode.HTML}
     if mtype not in ("sticker", "video_note"):
         kwargs["caption"] = caption
     if mtype == "video":

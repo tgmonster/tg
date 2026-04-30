@@ -38,7 +38,8 @@ def detect_platform(url: str) -> str:
 
 
 def is_external_link(url: str) -> bool:
-    return any(d in url for d in PLATFORM_NAMES)
+    normalized = (url or "").lower()
+    return any(d in normalized for d in PLATFORM_NAMES)
 
 
 def _make_cookie_file(env_key: str, prefix: str):
@@ -105,6 +106,7 @@ async def _safe_edit(msg, text: str):
 
 
 async def download_external(url: str, status_msg, quality: str = "best") -> tuple:
+    url = (url or "").strip()
     platform = detect_platform(url)
     await status_msg.edit(f"{platform} yuklanmoqda...")
 
@@ -154,10 +156,16 @@ async def download_external(url: str, status_msg, quality: str = "best") -> tupl
 
     except yt_dlp.utils.DownloadError as e:
         err = str(e)
+        low = err.lower()
         if "Private" in err:
             raise Exception("Bu video yopiq (private).")
-        if "unavailable" in err.lower():
+        if "unavailable" in low:
             raise Exception("Video mavjud emas yoki o'chirilgan.")
+        if "sign in to confirm" in low or "cookies" in low:
+            raise Exception(
+                "YouTube kontenti uchun autentifikatsiya kerak. "
+                "Railway env ga YOUTUBE_COOKIES (Netscape format) qo'shing."
+            )
         raise Exception(err[:300])
 
     finally:
