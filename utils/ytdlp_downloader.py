@@ -133,7 +133,9 @@ async def download_external(url: str, status_msg, quality: str = "best") -> tupl
 
     # Sifat tanlash
     if quality == "audio":
-        ydl_opts["format"] = "bestaudio[ext=m4a]/bestaudio"
+        # Some videos don't expose m4a. Keep it flexible and let ffmpeg
+        # conversion/compression pipeline normalize output later.
+        ydl_opts["format"] = "bestaudio/best"
     elif quality == "720":
         ydl_opts["format"] = "best[height<=720][ext=mp4]/best[height<=720]"
     elif quality == "480":
@@ -161,6 +163,16 @@ async def download_external(url: str, status_msg, quality: str = "best") -> tupl
             raise Exception("Bu video yopiq (private).")
         if "unavailable" in low:
             raise Exception("Video mavjud emas yoki o'chirilgan.")
+        if "requested format is not available" in low:
+            raise Exception(
+                "Tanlangan format mavjud emas. Bot endi fallback bilan ishlaydi; "
+                "qayta urinib ko'ring."
+            )
+        if "instagram" in low and ("login required" in low or "cookies" in low):
+            raise Exception(
+                "Instagram uchun autentifikatsiya kerak. "
+                "Railway env ga INSTAGRAM_COOKIES (Netscape format) qo'shing."
+            )
         if "sign in to confirm" in low or "cookies" in low:
             raise Exception(
                 "YouTube kontenti uchun autentifikatsiya kerak. "
