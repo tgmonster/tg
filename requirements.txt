@@ -1,0 +1,4 @@
+pyrofork
+tgcrypto
+yt-dlp
+uvloop; platform_system != "Windows"
