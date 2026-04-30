@@ -87,7 +87,7 @@ def register_start(bot: Client):
     async def cmd_start(_, msg: Message):
         await msg.reply(
             _start_message(),
-            parse_mode="html",
+            parse_mode="HTML",
             reply_markup=_home_keyboard(),
         )
 
@@ -97,7 +97,7 @@ def register_help(bot: Client):
     async def cmd_help(_, msg: Message):
         await msg.reply(
             _help_message(),
-            parse_mode="html",
+            parse_mode="HTML",
             reply_markup=_home_keyboard(),
         )
 
@@ -113,7 +113,7 @@ def register_stats(bot: Client):
             f"✅ Success: <b>{s.get('done', 0)}</b>\n"
             f"❌ Failed: <b>{s.get('failed', 0)}</b>\n"
             f"⏳ Queue: <b>{q}</b>",
-            parse_mode="html",
+            parse_mode="HTML",
             reply_markup=_home_keyboard(),
         )
 
@@ -121,7 +121,7 @@ def register_stats(bot: Client):
 def register_quick_actions(bot: Client):
     @bot.on_message(allowed() & filters.regex(r"^📘 Help$"))
     async def help_button(_, msg: Message):
-        await msg.reply(_help_message(), parse_mode="html", reply_markup=_home_keyboard())
+        await msg.reply(_help_message(), parse_mode="HTML", reply_markup=_home_keyboard())
 
     @bot.on_message(allowed() & filters.regex(r"^📊 Stats$"))
     async def stats_button(_, msg: Message):
@@ -133,7 +133,7 @@ def register_quick_actions(bot: Client):
             f"✅ Success: <b>{s.get('done', 0)}</b>\n"
             f"❌ Failed: <b>{s.get('failed', 0)}</b>\n"
             f"⏳ Queue: <b>{q}</b>",
-            parse_mode="html",
+            parse_mode="HTML",
             reply_markup=_home_keyboard(),
         )
 
@@ -142,7 +142,7 @@ def register_quick_actions(bot: Client):
         removed = await download_queue.clear_user_queue(msg.from_user.id)
         await msg.reply(
             f"🧹 Pending queue cleaned: <b>{removed}</b> item(s) removed.",
-            parse_mode="html",
+            parse_mode="HTML",
             reply_markup=_home_keyboard(),
         )
 
@@ -156,7 +156,7 @@ def register_link_handler(bot: Client, user: Client):
             platform = detect_platform(text)
             await msg.reply(
                 f"{platform} link accepted.\n<b>Select quality:</b>",
-                parse_mode="html",
+                parse_mode="HTML",
                 reply_markup=_ext_keyboard(text),
             )
             return
@@ -168,18 +168,18 @@ def register_link_handler(bot: Client, user: Client):
                 "Examples:\n"
                 "<code>https://t.me/c/1234567890/293</code>\n"
                 "<code>https://youtube.com/watch?v=...</code>",
-                parse_mode="html",
+                parse_mode="HTML",
             )
             return
 
         for link in links:
             parsed = parse_link(link)
             if not parsed:
-                await msg.reply(f"❌ Invalid link:\n<code>{link}</code>", parse_mode="html")
+                await msg.reply(f"❌ Invalid link:\n<code>{link}</code>", parse_mode="HTML")
                 continue
             await msg.reply(
                 "Telegram link accepted.\n<b>Select output mode:</b>",
-                parse_mode="html",
+                parse_mode="HTML",
                 reply_markup=_tg_keyboard(link),
             )
 
@@ -191,7 +191,7 @@ def register_link_handler(bot: Client, user: Client):
             _, quality, url = data.split("|", 2)
             label = {"best": "HD", "720": "720p", "480": "480p", "audio": "Audio"}.get(quality, quality)
             platform = detect_platform(url)
-            await cb.message.edit_text(f"{platform} — <b>{label}</b> queued ⏳", parse_mode="html")
+            await cb.message.edit_text(f"{platform} — <b>{label}</b> queued ⏳", parse_mode="HTML")
             await cb.answer()
             await _enqueue_external(user, cb.message, url, quality)
             return
@@ -199,7 +199,7 @@ def register_link_handler(bot: Client, user: Client):
         if data.startswith("tq|"):
             _, mode, url = data.split("|", 2)
             label = "Video" if mode == "video" else "Audio"
-            await cb.message.edit_text(f"Telegram — <b>{label}</b> queued ⏳", parse_mode="html")
+            await cb.message.edit_text(f"Telegram — <b>{label}</b> queued ⏳", parse_mode="HTML")
             await cb.answer()
             parsed = parse_link(url)
             if not parsed:
@@ -214,7 +214,7 @@ def register_link_handler(bot: Client, user: Client):
 async def _enqueue_tg(user: Client, msg: Message, parsed: ParsedLink, link: str, audio_only: bool = False):
     q = download_queue.queue_size(msg.from_user.id)
     if q > 0:
-        await msg.reply(f"⏳ Queue position: <b>{q + 1}</b>", parse_mode="html")
+        await msg.reply(f"⏳ Queue position: <b>{q + 1}</b>", parse_mode="HTML")
 
     async def task():
         await _process_tg(user, msg, parsed, link, audio_only)
@@ -225,7 +225,7 @@ async def _enqueue_tg(user: Client, msg: Message, parsed: ParsedLink, link: str,
 async def _enqueue_external(user: Client, msg: Message, url: str, quality: str):
     q = download_queue.queue_size(msg.from_user.id)
     if q > 0:
-        await msg.reply(f"⏳ Queue position: <b>{q + 1}</b>", parse_mode="html")
+        await msg.reply(f"⏳ Queue position: <b>{q + 1}</b>", parse_mode="HTML")
 
     async def task():
         await _process_external(user, msg, url, quality)
@@ -245,7 +245,7 @@ async def _process_tg(user: Client, bot_msg: Message, parsed: ParsedLink, link: 
             await status.edit("❌ Media not found.")
             return
         if mtype == "text":
-            await status.edit(f"📝 <b>Message</b>\n\n{file_path}", parse_mode="html")
+            await status.edit(f"📝 <b>Message</b>\n\n{file_path}", parse_mode="HTML")
             return
         if mtype == "empty":
             await status.edit("❌ Empty message.")
@@ -290,7 +290,7 @@ async def _handle_error(status_msg: Message, err: str):
     }
     hint = next((v for k, v in hints.items() if k in err), err[:200])
     try:
-        await status_msg.edit(f"❌ <b>Error:</b>\n<code>{hint}</code>", parse_mode="html")
+        await status_msg.edit(f"❌ <b>Error:</b>\n<code>{hint}</code>", parse_mode="HTML")
     except Exception:
         logger.exception("Failed to edit error status message")
 
