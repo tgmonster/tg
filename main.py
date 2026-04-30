@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from pyrogram import Client
+from pyrogram import Client, enums
 from pyrogram.errors import FloodWait
 
 from config import API_ID, API_HASH, BOT_TOKEN, SESSION_STRING, DOWNLOAD_DIR
@@ -41,7 +41,7 @@ async def main():
         api_id=API_ID,
         api_hash=API_HASH,
         bot_token=BOT_TOKEN,
-        parse_mode="HTML",
+        parse_mode=enums.ParseMode.HTML,
     )
 
     register_all(bot, user)
