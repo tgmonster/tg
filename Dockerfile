@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -r
 
 FROM base AS deps
 
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 FROM base AS runtime
 
