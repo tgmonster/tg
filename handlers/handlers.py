@@ -21,6 +21,9 @@ BOT_COMMANDS = ["start", "help", "stats"]
 
 
 def allowed():
+    # If ALLOWED_USER_IDS is empty, allow all private users.
+    if not ALLOWED_USERS:
+        return filters.private
     return filters.user(ALLOWED_USERS) & filters.private
 
 
