@@ -1,4 +1,5 @@
 import logging
+import re
 
 from pyrogram import Client, enums, filters
 from pyrogram.types import (
@@ -156,37 +157,46 @@ def register_quick_actions(bot: Client):
 def register_link_handler(bot: Client, user: Client):
     @bot.on_message(allowed() & filters.text & ~filters.command(BOT_COMMANDS))
     async def handle_text(_, msg: Message):
-        text = msg.text.strip()
+        text = (msg.text or "").strip()
+        try:
+            # Accept links even when message has extra text before/after URL.
+            all_urls = re.findall(r"https?://\S+", text)
+            first_external = next((u for u in all_urls if is_external_link(u)), None)
+            if first_external:
+                platform = detect_platform(first_external)
+                await msg.reply(
+                    f"{platform} link accepted.\n<b>Select quality:</b>",
+                    parse_mode=enums.ParseMode.HTML,
+                    reply_markup=_ext_keyboard(first_external),
+                )
+                return
 
-        if is_external_link(text):
-            platform = detect_platform(text)
-            await msg.reply(
-                f"{platform} link accepted.\n<b>Select quality:</b>",
-                parse_mode=enums.ParseMode.HTML,
-                reply_markup=_ext_keyboard(text),
-            )
-            return
+            links = extract_links(text)
+            if not links:
+                await msg.reply(
+                    "No valid link found.\n\n"
+                    "Examples:\n"
+                    "<code>https://t.me/c/1234567890/293</code>\n"
+                    "<code>https://youtube.com/watch?v=...</code>",
+                    parse_mode=enums.ParseMode.HTML,
+                )
+                return
 
-        links = extract_links(text)
-        if not links:
+            for link in links:
+                parsed = parse_link(link)
+                if not parsed:
+                    await msg.reply(f"❌ Invalid link:\n<code>{link}</code>", parse_mode=enums.ParseMode.HTML)
+                    continue
+                await msg.reply(
+                    "Telegram link accepted.\n<b>Select output mode:</b>",
+                    parse_mode=enums.ParseMode.HTML,
+                    reply_markup=_tg_keyboard(link),
+                )
+        except Exception as e:
+            logger.exception("handle_text failed")
             await msg.reply(
-                "No valid link found.\n\n"
-                "Examples:\n"
-                "<code>https://t.me/c/1234567890/293</code>\n"
-                "<code>https://youtube.com/watch?v=...</code>",
+                f"❌ Failed to parse/process this message.\n<code>{str(e)[:180]}</code>",
                 parse_mode=enums.ParseMode.HTML,
-            )
-            return
-
-        for link in links:
-            parsed = parse_link(link)
-            if not parsed:
-                await msg.reply(f"❌ Invalid link:\n<code>{link}</code>", parse_mode=enums.ParseMode.HTML)
-                continue
-            await msg.reply(
-                "Telegram link accepted.\n<b>Select output mode:</b>",
-                parse_mode=enums.ParseMode.HTML,
-                reply_markup=_tg_keyboard(link),
             )
 
     @bot.on_callback_query(allowed_callback())

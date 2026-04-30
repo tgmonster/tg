@@ -185,10 +185,21 @@ async def download_external(url: str, status_msg, quality: str = "best") -> tupl
 
 
 def _run_download(opts: dict, url: str) -> str:
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        path = ydl.prepare_filename(info)
-        for ext in (".webm", ".mkv"):
-            if path.endswith(ext):
-                path = path.replace(ext, ".mp4")
-        return path
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            path = ydl.prepare_filename(info)
+            for ext in (".webm", ".mkv"):
+                if path.endswith(ext):
+                    path = path.replace(ext, ".mp4")
+            return path
+    except yt_dlp.utils.DownloadError as e:
+        if "requested format is not available" not in str(e).lower():
+            raise
+
+        # Hard fallback for edge videos where chosen selector disappears.
+        fallback_opts = dict(opts)
+        fallback_opts["format"] = "best"
+        with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            return ydl.prepare_filename(info)
